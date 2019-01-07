@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Data Science: Baby Names</title>
+		<link rel="stylesheet" href="style/style.css" type="text/css" media="screen"/>
+		<meta charset="utf-8">
+		<script src="js/d3.v4.js"></script>
+	</head>
+
+	<body>
+		<header id="page_header">Data Science: Baby Names</header>
+		<article id="menu_s">
+			<div>Enter your surname:</div>
+			<form>
+				<input type="text" name="surname">
+			</form><p>
+			<div>Select the gender:</div><br>
+			<form>
+				<input type="radio" name="gender" onclick="create_table()" value="M" checked> Boy<br>
+				<input type="radio" name="gender" onclick="create_table()" value="F"> Girl<br>
+
+			</form><p>
+			<div>Current popularity:</div><br>
+			<form>
+				<input type="radio" name="popul" onclick="create_table()" value="popular" checked> Popular<br>
+				<input type="radio" name="popul" onclick="create_table()" value="upcoming"> Upcoming<br>
+				<input type="radio" name="popul" onclick="create_table()" value="decline"> Declining<br>
+				<input type="radio" name="popul" onclick="create_table()" value="stable"> Stable<br>
+			</form>			
+		</article>
+		<article id="top_c">
+			<div id="grid"></div>
+		</article>
+		<article id="bot_c">
+			<div id="chrt"></div>
+		</article>
+		<div id=page_footer">PenguinStrikes</div>
+
+		<script type="text/javascript">
+
+			create_table(); // Function to build our grid for holding the names
+
+			function create_table() {
+				// Get the latest value from the radio button selection
+				var gender = d3.select('input[name="gender"]:checked').node().value
+
+				// Get the whole dataset for processing before building the table
+				d3.json("data/frstnames_pop.json", function(error, data) {
+					if (error) throw error;
+					var grid = divGrid();
+
+					// Filter out gender
+					data = data.filter(function(d) {return d['Sex'] == gender});
+
+
+					// Extra filter based on the popularity trends
+					var sorter = d3.select('input[name="popul"]:checked').node().value;
+
+					if (sorter == 'upcoming') {
+						data = data.filter(function(d) {
+							return (d['trend_profile'] == 'RECENT BOOM') | (d['trend_profile'] == 'GROWING BOOM')});
+					} else if (sorter == 'decline') {
+						data = data.filter(function(d) {
+							return (d['trend_profile'] == 'RECENT DECLINE') | (d['trend_profile'] == 'GROWING DECLINE')});
+					} else if (sorter == 'stable') {
+						data = data.filter(function(d) {
+							return (d['trend_profile'] == 'STABILITY')});
+					};
+
+					dps = data.map(function(d) { return {
+						Name:          d['Name'],
+						Sex:           d['Sex'],
+						Trend:         d['trend_profile'],
+						Rank:          d['Rank'],
+						Phonetics:     d['phonetics'],
+						Phonetic_Type: d['phonetics_source'],
+						Prediction:    d['Predicted Change'],
+						trnd:          d['trend_data'],
+						pred:          d['batch_pred'],
+						futu:          d['trend_2018']
+					};});
+
+					dps.sort(function(a, b) {
+						return d3.ascending(a.Rank, b.Rank);
+					});
+
+					d3.select("#grid")
+						.datum(dps)
+						.call(grid)
+						.selectAll(".row")
+						.on("click", function(d) {nameSelect(d['trnd'], d['pred'], d['futu'], d['Sex'])})
+				});
+			};
+
+			function divGrid() {
+				var columns = [];
+				var dg = function(selection) {
+					if (columns.length == 0) columns = d3.keys(selection.data()[0][0]);
+					selection.selectAll(".header")
+						.data([true])
+						.enter().append("div")
+						.attr("class", "header")
+
+					var header = selection.select(".header")
+						.selectAll(".cell")
+						.data(columns);
+
+					header.enter().append("div")
+						.attr("class", function(d, i) {return "col-" + i;})
+						.classed("cell", true)
+
+					selection.selectAll(".header .cell")
+						.text(function(d) {return d});
+
+					header.exit().remove();
+
+					var rows = selection.selectAll(".row")
+						.data(function(d) {return d});
+
+					rows.enter().append("div")
+						.attr("class", "row")
+					rows.exit().remove();
+
+					var cells = selection.selectAll(".row").selectAll(".cell")
+						.data(function(d) {return columns.map(function(col) {return d[col];})})
+
+					cells.enter().append("div")
+						.attr("class", function(d, i) {return "col-" + i;})
+						.classed("cell", true)
+					cells.exit().remove();
+
+					selection.selectAll(".cell")
+						.text(function(d) {return d;});
+				return dg;
+				};
+
+				dg.columns = function(_) {
+					if (!arguments.length) return columns;
+					columns = _;
+					return this;
+				};
+				return dg;
+			};
+
+			function nameSelect(trend, predictions, future, gender) {
+				d3.select("#chrt").selectAll("svg").remove();
+				var w = (document.getElementById('chrt').offsetWidth * 0.88 ) - 60;
+				var h = (document.getElementById('chrt').offsetHeight * 0.90 ) - 10;
+
+				var x = d3.scaleLinear().domain([new Date(2000), new Date(2019)]).range([0, w])
+				var maxx = d3.max(trend, function(d) {return +d;});
+
+				var y = d3.scaleLinear().domain([0, maxx]).range([h, 0]);
+
+				var valueline = d3.line()
+					.x(function(d, i) {return x(i + 2000);})
+					.y(function(d) {return y(d);})
+
+				var graph = d3.select('#chrt').append("svg:svg")
+					.attr("width", w + 60)
+					.attr("height", h + 30)
+					.append("svg:g")
+					.attr("transform", "translate(" + 60 + "," + 10 + ")");
+
+				graph.append("svg:path")
+					.attr("d", valueline(trend))
+					.attr("class", "line_" + gender)
+
+				graph.append("svg:path")
+					.attr("d", valueline(predictions))
+					.attr("class", "line2_" + gender)
+
+				graph.append("g")
+					.call(d3.axisLeft(y));
+
+				graph.append("g")
+					.attr("transform", "translate(0," + h + ")")
+					.call(d3.axisBottom(x).tickFormat(d3.format("d")));
+			};
+
+		</script>
+	</body>
+</html>

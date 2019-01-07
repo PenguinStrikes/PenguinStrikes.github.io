@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Science: Contact</title>
+  <link rel="stylesheet" href="assets/css/style.css" type="text/css" media="screen"/>
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+  <meta charset="utf-8">
+</head>
+
+<body>
+	<body bgcolor="#E9E9E9">
+	<div class="topnav" id="myTopnav">
+		  <a href="index.html">Home</a>
+		  <a href="Projects.html">Projects</a>
+		  <a href="About.html">About</a>
+		  <a href="Contact.html">Contact</a>
+	</div>
+	<div id="main-header">About</div>
+	<div id="main-wrapper">
+		<div id="sidebar">
+			<div id="cite">PenguinStrikes is the alias of Data Scientist Christopher Doughty. Chris currently works for Skyscanner and is based in Edinburgh.<br><br>He graduated from the University of St. Andrews with a degree in Behavioural Biology, working in Advertising, Media, Analytics and now Software Engineering.<br><br>Chris specialises in visualisation, statistical learning and communication, with this site showcasing various personal projects.<br><br>The visualisation to the right represents a day in the life of a Data Scientist, something which is not as interesting as its premise!
+			</div>
+		</div>
+
+	<div id="chart"></div>
+	<div class="clr"></div>
+	</div>
+
+	<script src="assets/d3-3-5-5.min.js"></script>
+	<script>
+		var sched_objs = [];
+		var width = document.getElementById('chart').offsetWidth,
+			height = document.getElementById('chart').offsetHeight,
+			ww = width/2,
+			hh = height/2,
+			padding = 1,
+			maxRadius = 3;
+		var act_codes = [
+			{"index": "0", "short": "Sleep", "desc": "Sleep"},
+			{"index": "1", "short": "Wake-up", "desc": "Wake-up"},
+			{"index": "2", "short": "Eating", "desc": "Eating"},
+			{"index": "3", "short": "Commute", "desc": "Commute"},
+			{"index": "4", "short": "Work-Office", "desc": "Work-Office"},
+			{"index": "5", "short": "Work-Home", "desc": "Work-Home"},
+			{"index": "6", "short": "Dog Walk", "desc": "Dog Walk"},
+			{"index": "7", "short": "Recreation", "desc": "Recreation"},
+			{"index": "8", "short": "Travelling", "desc": "Travelling"}
+		];
+		var speeds = 150;
+		var center_act = "Sleep", center_pt = {"x": ww, "y": hh};
+		var foci = {};
+		act_codes.forEach(function(code, i) {
+			if (code.desc == center_act) {
+				foci[code.index] = center_pt;
+			} else {
+				var theta = 2 * Math.PI / (act_codes.length-1);
+				foci[code.index] = {x: hh/1.2 * Math.cos(i * theta) + ww, y: hh/1.2 * Math.sin(i * theta) + hh};
+			}
+		});
+
+		// Create the SVG
+		var svg = d3.select("#chart").append("svg")
+			.attr("width", width)
+			.attr("height", height);
+
+		// Variable for holding the number of day nodes that we're looking at
+		var node_counter = 0;
+
+		// Load in our daily data
+		d3.tsv("assets/daily_data.tsv", function(error, data) {
+			var curr_minute = 0;
+
+			data.forEach(function(d) {
+				node_counter += 1
+				var day_array = d.Journey.split(",");
+				var activities = [];
+				for (var i=0; i < day_array.length; i++) {
+					if (i % 2 == 1) {
+						activities.push({'act': day_array[i-1],
+										 'duration': Number(day_array[i])
+										});
+					}
+				}
+				sched_objs.push(activities);
+			})
+
+			// Variable used for the percentage related to each activity
+			var act_counts = {"0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0};
+
+			// Create a different node for each day in the data (row)
+			var nodes = sched_objs.map(function(o, i) {
+				var act = o[0].act;
+				act_counts[act] += 1; // add numbers of our percentage counts
+				var init_x = foci[act].x + Math.random();
+				var init_y = foci[act].y + Math.random();
+				return {
+					act: act,
+					radius: 4, // Size of the nodes in the chart
+					x: init_x,
+					y: init_y,
+					moves: 0,
+					next_move_time: o[0].duration,
+					sched: o,
+				}
+			});
+
+			var force = d3.layout.force()
+				.nodes(nodes)
+				.size([width, height])
+				.gravity(0)
+				.charge(0)
+				.friction(.9)
+				.on("tick", tick)
+				.start();
+
+			// Physical node shape
+			var circle = svg.selectAll("circle")
+				.data(nodes)
+				.enter().append("circle")
+				.attr("r", function(d) {return d.radius;})
+
+			// Create the labels for each activity
+			var label = svg.selectAll("text")
+				.data(act_codes)
+				.enter().append("text")
+				.attr("class","actlabel")
+				.attr("x", function(d, i) {
+					if (d.desc == center_act) {return center_pt.x;}
+					else {
+						var theta = 2 * Math.PI / (act_codes.length-1);
+						return hh/1.2 * Math.cos(i * theta) + ww;
+					}
+				})
+				.attr("y", function(d, i) {
+					if (d.desc == center_act) {return center_pt.y;}
+					else {
+						var theta = 2 * Math.PI / (act_codes.length-1);
+						return hh/1.2 * Math.sin(i * theta) + hh;
+					}
+				})
+
+			label.append("tspan")
+				.attr("x", function() {return d3.select(this.parentNode).attr("x")})
+				.attr("text-anchor", "middle")
+				.text(function(d) {return d.short;});
+
+			label.append("tspan")
+				.attr("dy", "1.3em")
+				.attr("x", function() {return d3.select(this.parentNode).attr("x")})
+				.attr("text-anchor", "middle")
+				.attr("class", "aspect")
+				.text(function(d) {return act_counts[d.index]});
+
+			// Update all nodes based on their activity and duration
+			function timer() {
+				d3.range(nodes.length).map(function(i) {
+					var curr_node = nodes[i],
+						curr_moves = curr_node.moves;
+					// Go to next activity
+					if (curr_node.next_move_time == curr_minute) {
+						if (curr_node.moves == curr_node.sched.length-1) {
+							curr_moves = 0;
+						} else {
+							curr_moves += 1;
+						}
+						// Subtract form current activity count
+						act_counts[curr_node.act] -= 1;
+						// Move to the next activity
+						curr_node.act = curr_node.sched[curr_moves].act;
+						// Add to the new activity count
+						act_counts[curr_node.act] += 1;
+
+						curr_node.moves = curr_moves;
+						curr_node.cx = foci[curr_node.act].x;
+						curr_node.cy = foci[curr_node.act].y;
+						nodes[i].next_move_time += nodes[i].sched[curr_node.moves].duration;
+					}
+				});
+
+				force.resume();
+				curr_minute += 1;
+
+				// Update the percentages
+				label.selectAll("tspan.actpct")
+					.text(function(d) {
+						return readablePercent(act_counts[d.index]);
+					});
+				setTimeout(timer, speeds);
+			}
+			setTimeout(timer, speeds);
+
+			function tick(e) {
+				// Speed of nodes
+				var k = 0.04 * e.alpha;
+				// All nodes
+				nodes.forEach(function(o,i) {
+					var curr_act = o.act;
+					var damper = 1;
+
+					// Colouring of the nodes
+					o.color = color(curr_act);
+
+					// Push nodes towards their focus points
+					o.y += (foci[curr_act].y - o.y) * k * damper;
+					o.x += (foci[curr_act].x - o.x) * k * damper;
+				});
+
+				circle
+					.each(collide(.1)) // Changing to 0 will remove all collisions
+					.style("fill", function(d) {return d.color;})
+					.attr("cx", function(d) {return d.x;})
+					.attr("cy", function(d) {return d.y;});
+			}
+
+			// Resolve collisions between nodes
+			function collide(alpha) {
+				var quadtree = d3.geom.quadtree(nodes);
+				return function(d) {
+					var r = d.radius = maxRadius + padding,
+						nx1 = d.x - r,
+						nx2 = d.x + r,
+						ny1 = d.y - r,
+						ny2 = d.y + r;
+					quadtree.visit(function(quad, x1, y1, x2, y2) {
+						if (quad.point && (quad.point !== d)) {
+							var x = d.x - quad.point.x,
+								y = d.y - quad.point.y,
+								l = Math.sqrt(x * x + y * y),
+								r = d.radius + quad.point.radius + (d.act !== quad.point.act) * padding;
+							if (l < r) {
+								l = (l-r)/l * alpha;
+								d.x -= x *= l;
+								d.y -= y *= l;
+								quad.point.x += x;
+								quad.point.y += y;
+							}
+						}
+						return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+					});
+				}
+			}
+		}); // end of the d3.txt function
+
+		// Color based on activity
+		function color(activity) {
+			var colorByActivity = {
+				"0":"#FAA43A",
+				"1":"#FAA43A",
+				"2":"#FAA43A",
+				"3":"#FAA43A",
+				"4":"#FAA43A",
+				"5":"#FAA43A",
+				"6":"#FAA43A",
+				"7":"#FAA43A",
+				"8":"#FAA43A"}
+			return colorByActivity[activity];
+		};
+
+		// Percentage text
+		function readablePercent(n) {
+			var cnt = n;
+			var pct = 100 * n / node_counter;
+			if (pct < 1 && pct > 0) {pct = "<1%";}
+			else {pct = Math.round(pct) + "%";}
+			var txt = String(n) + "(" + String(pct) + ")"
+			return txt;
+		};
+
+		// Increment time
+		function minutesToTime(m) {return m};
+	</script>
+</body>
+</html>
