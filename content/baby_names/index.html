@@ -58,13 +58,19 @@
 
 					if (sorter == 'upcoming') {
 						data = data.filter(function(d) {
-							return (d['trend_profile'] == 'RECENT BOOM') | (d['trend_profile'] == 'GROWING BOOM')});
+							return (d['trend_profile'] == 'RECENT BOOM') | 
+							       (d['trend_profile'] == 'GROWING BOOM') |
+							       (d['trend_profile'] == 'GROWTH STABILISING')});
 					} else if (sorter == 'decline') {
 						data = data.filter(function(d) {
-							return (d['trend_profile'] == 'RECENT DECLINE') | (d['trend_profile'] == 'GROWING DECLINE')});
+							return (d['trend_profile'] == 'RECENT DECLINE') | 
+							       (d['trend_profile'] == 'GROWING DECLINE') |
+							       (d['trend_profile'] == 'DECLINE STABILISING')});
 					} else if (sorter == 'stable') {
 						data = data.filter(function(d) {
-							return (d['trend_profile'] == 'STABILITY')});
+							return (d['trend_profile'] == 'CURRENTLY STABLE') |
+						           (d['trend_profile'] == 'DECLINE STABILISING') |
+						           (d['trend_profile'] == 'GROWTH STABILISING')});
 					};
 
 					dps = data.map(function(d) { return {
