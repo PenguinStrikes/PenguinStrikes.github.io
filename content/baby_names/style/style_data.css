@@ -86,7 +86,7 @@ body {
 	"topp"
 	"bott "
 	"footer";
-  grid-template-rows: 16% auto 37% 8%;
+  grid-template-rows: 16% 32% 30% 8%;
   grid-template-columns: 100%;
   grid-row-gap: 1%;
   grid-column-gap: 0%;

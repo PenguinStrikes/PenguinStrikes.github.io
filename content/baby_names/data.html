@@ -19,7 +19,7 @@
 	    </div>
 	    <div class="page_footer">
 	    	<h3>Created by PenguinStrikes<br>
-	    	<a href="https://www.w3schools.com/html/">Link to methodology article</a></h3>
+	    	<a href="https://www.google.co.uk">Link to methodology article</a></h3>
 	    </div>
 		<script type="text/javascript">
 			// Gather the expected parameters from the URL
@@ -110,15 +110,10 @@
 
 					data = [];
 
-					if (scoring == 'N') {
 						dps.sort(function(a, b) {
 							return d3.ascending(a.Rank, b.Rank);
-						});}
-					else {
-						dps.sort(function(a, b) {
-							return d3.ascending(a.Score, b.Score);
 						});
-					}
+
 
 					d3.select("#grid")
 						.datum(dps)
