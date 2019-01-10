@@ -36,9 +36,15 @@
 			function create_table(gender, sorter) {
 				// Get the latest value from the radio button selection
 				//var gender = d3.select('input[name="gender"]:checked').node().value
+				var myx = screen.width;
+				if (myx < 420) {
+					var file = "data/frstnames_pop_red.json";
+				} else {
+					var file = "data/frstnames_pop.json";
+				};
 
 				// Get the whole dataset for processing before building the table
-				d3.json("data/frstnames_pop.json", function(error, data) {
+				d3.json(file, function(error, data) {
 					if (error) throw error;
 					var grid = divGrid();
 
@@ -91,8 +97,6 @@
 						};
 					};
 
-					//console.log(data);
-
 					dps = data.map(function(d) { return {
 						Name:          d['Name'],
 						Rank:          d['Rank'],
@@ -102,6 +106,8 @@
 						trnd:          d['trend_data'],
 						futu:          d['trend_2018']
 					};});
+
+					data = [];
 
 					if (scoring == 'N') {
 						dps.sort(function(a, b) {

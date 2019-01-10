@@ -13,6 +13,7 @@
 			<!-- The title of our form -->
 			<h1 align="center"><img src="assets/Oryx.png" height="90" width="90"><br>Baby Names</h1>
 			<h2 align="center">Data Science Model</h2>
+			<h3 align="left" id="constraint">Dynamic</h3>
 
 			<!-- Tabs for each section we would like the user to complete -->
 			<div class="tab">Enter your last name:
@@ -61,6 +62,13 @@
 		</form>
 
 		<script>
+			var myx = screen.width;
+			if (myx < 420) {
+				constraint.innerText = "Note: on mobile devices the pool of first names data is reduced to optimise performance. This process can still use several Mb of data if not on WiFI.";
+			} else {
+				constraint.innerText = "Note: on non-mobile devices the complete pool of first names is being used.";				
+			}
+			
 			var currentTab = 0; // Current tab is set to be the first tab (0)
 			showTab(currentTab); // Display the current tab
 
