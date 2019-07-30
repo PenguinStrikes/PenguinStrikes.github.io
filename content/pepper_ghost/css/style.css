@@ -1,0 +1,53 @@
+body {
+	background-color: #000;
+	display: grid;
+	grid-template-areas:
+		"leftt 1 two 3 rightt"
+		"leftt four 5 six rightt"
+		"leftt 7 eight 9 rightt";
+	grid-template-rows: 33% 33% 33%;
+	grid-template-columns: 20% 20% 20% 20% 20%;
+	height: 100vh;
+	width: 166vh;
+}
+
+#two {
+	grid-area: two;
+} 
+
+#four {
+	grid-area: four;
+} 
+
+#six {
+	grid-area: six;
+} 
+
+#eight {
+	grid-area: eight;
+} 
+
+#left {
+	grid-area: leftt;
+} 
+
+#chrt {
+	height: 100%;
+	width: 100%;
+}
+
+#chrt_wrapper_top {
+	height: 100%;
+	width: 100%;
+}
+
+.line_ {
+	fill: none;
+	transition: all ease 0.4s;
+	transition: opacity 0.4s ease;
+}
+
+.circle_ {
+	fill: #FFFFFF;
+	transition: all ease 0.4s;
+}

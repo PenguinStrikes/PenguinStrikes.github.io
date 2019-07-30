@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>London Underground Hologram</title>
+		<script src="js/d3.v4.js"></script>
+		<link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8"/>
+	</head>
+	<body>
+		<div id="left">
+			<div class="slidecontainer">Select a line:</div>
+			<select id="dd1">
+				<option value="Bakerloo">Bakerloo</option>
+				<option value="Central_1">Central_1</option>
+				<option value="Central_2">Central_2</option>
+				<option value="Central_3">Central_3</option>
+				<option value="Circle">Circle</option>
+				<option value="District_1">District_1</option>
+				<option value="District_2">District_2</option>
+				<option value="District_3">District_3</option>
+				<option value="District_4">District_4</option>
+				<option value="District_5">District_5</option>
+				<option value="Hammersmith">Hammersmith</option>
+				<option value="Jubilee">Jubilee</option>
+				<option value="Metropolitan_1">Metropolitan_1</option>
+				<option value="Metropolitan_2">Metropolitan_2</option>
+				<option value="Metropolitan_3">Metropolitan_3</option>
+				<option value="Metropolitan_4">Metropolitan_4</option>
+				<option value="Piccadilly_1">Picadilly_1</option>
+				<option value="Piccadilly_2">Picadilly_2</option>
+				<option value="Victoria">Victoria</option>
+				<option value="Waterloo">Waterloo</option>
+			</select><p>
+			<div class="slidecontainer" id="s1">
+				<input autocomplete="off" type="range" min="1" max="100" value="100" class="slider" id="dist_slider">
+			</div>
+		</div>
+		<div id="two">
+			<div id="chrt_wrapper_top"></div>
+		</div>
+		<div id="eight">
+			<div id="chrt_wrapper_bot"></div>
+		</div>
+		<div id="four">
+			<div id="chrt_wrapper_lft"></div>
+		</div>
+		<div id="six">
+			<div id="chrt_wrapper_rgt"></div>
+		</div>
+
+		<script type="text/javascript">
+			var w = document.getElementById("chrt_wrapper_top").offsetWidth;
+			var h = document.getElementById("chrt_wrapper_top").offsetHeight;
+			var init = 100;
+
+			var graph_top = d3.select('#chrt_wrapper_top').append("svg:svg")
+				.attr("width", w)
+				.attr("height", h)
+				.append("svg:g")
+				.attr("transform", "translate(0,30)")
+
+			var graph_bot = d3.select('#chrt_wrapper_bot').append("svg:svg")
+				.attr("width", w)
+				.attr("height", h)
+				.attr('transform', 'rotate(180 0 0)')
+				.append("svg:g")
+				.attr("transform", "translate(0,30)")
+
+			var graph_lft = d3.select('#chrt_wrapper_lft').append("svg:svg")
+				.attr("width", w)
+				.attr("height", h)
+				.attr('transform', 'rotate(270 0 0)')
+				.append("svg:g")
+				.attr("transform", "translate(0,30)")
+
+			var graph_rgt = d3.select('#chrt_wrapper_rgt').append("svg:svg")
+				.attr("width", w)
+				.attr("height", h)
+				.attr('transform', 'rotate(90 0 0)')
+				.append("svg:g")
+				.attr("transform", "translate(0,30)")
+				
+
+			function chart_build(file, redraw, init) {
+				d3.json("data/"+file+".json", function(j) {
+					xd = j["x"];
+					yd = j["y"];
+					gd = j["g"];
+					cd = j["c"];
+					ground = [];
+					tracks = [];
+					values = [];
+
+					for (var i=0; i < xd.length; i++) {
+						var grnd = {poi_x: xd[i], poi_y: gd[i]}
+						var trak = {poi_x: xd[i], poi_y: yd[i]}
+						values.push(gd[i]);
+						values.push(yd[i]);
+
+						ground.push(grnd);
+						tracks.push(trak);
+					};
+
+					if (d3.max(values) - d3.min(values) < 200) {
+						var miny = d3.min(values) - 10
+						var maxy = d3.max(values) + 10
+					} else {
+						var miny = d3.min(values)
+						var maxy = d3.max(values)
+					}
+
+					var x = d3.scaleLinear().domain([0 - (d3.max(xd) * 0.1), d3.max(xd) * (init/100)]).range([0, w * 0.95])
+					var y = d3.scaleLinear().domain([miny, maxy]).range([h * 0.85, 0])
+
+					var valueline = d3.line()
+						.x(function(d) {return x(d.poi_x);})
+						.y(function(d) {return y(d.poi_y);})
+						.defined(function(d) {return d.poi_y && d.poi_x;});
+
+
+					if (redraw == true) {
+						for (var i=0; i < xd.length; i++) {
+							vline = [{poi_x: xd[i], poi_y: yd[i]},{poi_x: xd[i], poi_y: gd[i]}]
+
+							graph_top.append("svg:path")
+								.attr("d", valueline(vline))
+								.attr("class", "line_")
+								.attr("id", i + "join_line_t")
+								.attr("stroke", "#E2DDDA")
+								.style("stroke-width", 3)
+								.style("stroke-dasharray", "4,4")
+								.style("opacity", 0.3);
+
+							graph_bot.append("svg:path")
+								.attr("d", valueline(vline))
+								.attr("class", "line_")
+								.attr("id", i + "join_line_b")
+								.attr("stroke", "#E2DDDA")
+								.style("stroke-width", 3)
+								.style("stroke-dasharray", "4,4")
+								.style("opacity", 0.3);
+
+							graph_lft.append("svg:path")
+								.attr("d", valueline(vline))
+								.attr("class", "line_")
+								.attr("id", i + "join_line_l")
+								.attr("stroke", "#E2DDDA")
+								.style("stroke-width", 3)
+								.style("stroke-dasharray", "4,4")
+								.style("opacity", 0.3);
+
+							graph_rgt.append("svg:path")
+								.attr("d", valueline(vline))
+								.attr("class", "line_")
+								.attr("id", i + "join_line_r")
+								.attr("stroke", "#E2DDDA")
+								.style("stroke-width", 3)
+								.style("stroke-dasharray", "4,4")
+								.style("opacity", 0.3);
+						}
+
+						hline = [{poi_x: xd[0], poi_y: 100},{poi_x: xd[xd.length-1], poi_y: 100}]
+						graph_top.append("svg:path")
+							.attr("d", valueline(hline))
+							.attr("class", "line_")
+							.attr("id", "const_line_t")
+							.attr("stroke", "#FFFFFF")
+							.style("stroke-width", 2)
+							.style("stroke-dasharray", "4,4")
+							.style("opacity", 0.6);
+
+						graph_top.append("svg:path")
+							.attr("d", valueline(ground))
+							.attr("class", "line_")
+							.attr("id", "line_ground_t")
+							.attr("stroke", "#E2DDDA")
+							.style("stroke-width", 2)
+							.style("opacity", 0.6);
+
+						graph_top.append("svg:path")
+							.attr("d", valueline(tracks))
+							.attr("class", "line_")
+							.attr("id", "line_tracks_t")
+							.attr("stroke", cd)
+							.style("stroke-width", 5)
+							.style("opacity", 1);
+						////
+						graph_bot.append("svg:path")
+							.attr("d", valueline(hline))
+							.attr("class", "line_")
+							.attr("id", "const_line_b")
+							.attr("stroke", "#FFFFFF")
+							.style("stroke-width", 2)
+							.style("stroke-dasharray", "4,4")
+							.style("opacity", 0.6);
+
+						graph_bot.append("svg:path")
+							.attr("d", valueline(ground))
+							.attr("class", "line_")
+							.attr("id", "line_ground_b")
+							.attr("stroke", "#E2DDDA")
+							.style("stroke-width", 2)
+							.style("opacity", 0.6);
+
+						graph_bot.append("svg:path")
+							.attr("d", valueline(tracks))
+							.attr("class", "line_")
+							.attr("id", "line_tracks_b")
+							.attr("stroke", cd)
+							.style("stroke-width", 5)
+							.style("opacity", 1);
+						////
+						graph_lft.append("svg:path")
+							.attr("d", valueline(hline))
+							.attr("class", "line_")
+							.attr("id", "const_line_l")
+							.attr("stroke", "#FFFFFF")
+							.style("stroke-width", 2)
+							.style("stroke-dasharray", "4,4")
+							.style("opacity", 0.6);
+
+						graph_lft.append("svg:path")
+							.attr("d", valueline(ground))
+							.attr("class", "line_")
+							.attr("id", "line_ground_l")
+							.attr("stroke", "#E2DDDA")
+							.style("stroke-width", 2)
+							.style("opacity", 0.6);
+
+						graph_lft.append("svg:path")
+							.attr("d", valueline(tracks))
+							.attr("class", "line_")
+							.attr("id", "line_tracks_l")
+							.attr("stroke", cd)
+							.style("stroke-width", 5)
+							.style("opacity", 1);
+						////
+						graph_rgt.append("svg:path")
+							.attr("d", valueline(hline))
+							.attr("class", "line_")
+							.attr("id", "const_line_r")
+							.attr("stroke", "#FFFFFF")
+							.style("stroke-width", 2)
+							.style("stroke-dasharray", "4,4")
+							.style("opacity", 0.6);
+
+						graph_rgt.append("svg:path")
+							.attr("d", valueline(ground))
+							.attr("class", "line_")
+							.attr("id", "line_ground_r")
+							.attr("stroke", "#E2DDDA")
+							.style("stroke-width", 2)
+							.style("opacity", 0.6);
+
+						graph_rgt.append("svg:path")
+							.attr("d", valueline(tracks))
+							.attr("class", "line_")
+							.attr("id", "line_tracks_r")
+							.attr("stroke", cd)
+							.style("stroke-width", 5)
+							.style("opacity", 1);
+
+						for (var i=0; i < xd.length; i++) {
+							graph_top.append("circle")
+								.attr("r", 6)
+								.attr("class", "circle_")
+								.attr("cx", x(tracks[i].poi_x))
+								.attr("cy", y(tracks[i].poi_y))
+								.attr("id", i + "track_circle_t")
+								.attr("color", "#FFFFFF")
+								.style("stroke", cd)
+								.style("stroke-opacity", 1)
+								.style("stroke-width", 2);
+
+							graph_bot.append("circle")
+								.attr("r", 6)
+								.attr("class", "circle_")
+								.attr("cx", x(tracks[i].poi_x))
+								.attr("cy", y(tracks[i].poi_y))
+								.attr("id", i + "track_circle_b")
+								.attr("color", "#FFFFFF")
+								.style("stroke", cd)
+								.style("stroke-opacity", 1)
+								.style("stroke-width", 2);
+
+							graph_lft.append("circle")
+								.attr("r", 6)
+								.attr("class", "circle_")
+								.attr("cx", x(tracks[i].poi_x))
+								.attr("cy", y(tracks[i].poi_y))
+								.attr("id", i + "track_circle_l")
+								.attr("color", "#FFFFFF")
+								.style("stroke", cd)
+								.style("stroke-opacity", 1)
+								.style("stroke-width", 2);
+
+							graph_rgt.append("circle")
+								.attr("r", 6)
+								.attr("class", "circle_")
+								.attr("cx", x(tracks[i].poi_x))
+								.attr("cy", y(tracks[i].poi_y))
+								.attr("id", i + "track_circle_r")
+								.attr("color", "#FFFFFF")
+								.style("stroke", cd)
+								.style("stroke-opacity", 1)
+								.style("stroke-width", 2);
+						}
+					} else {
+						d3.select("[id='line_ground_t']").transition().duration(1000)
+							.attr("d", valueline(ground))
+						d3.select("[id='line_tracks_t']").transition().duration(1000)
+							.attr("d", valueline(tracks))
+							.style("stroke", cd)
+						d3.select("[id='line_ground_b']").transition().duration(1000)
+							.attr("d", valueline(ground))
+						d3.select("[id='line_tracks_b']").transition().duration(1000)
+							.attr("d", valueline(tracks))
+							.style("stroke", cd)
+						d3.select("[id='line_ground_l']").transition().duration(1000)
+							.attr("d", valueline(ground))
+						d3.select("[id='line_tracks_l']").transition().duration(1000)
+							.attr("d", valueline(tracks))
+							.style("stroke", cd)
+						d3.select("[id='line_ground_r']").transition().duration(1000)
+							.attr("d", valueline(ground))
+						d3.select("[id='line_tracks_r']").transition().duration(1000)
+							.attr("d", valueline(tracks))
+							.style("stroke", cd)
+
+						hline = [{poi_x: xd[0], poi_y: 100},{poi_x: xd[xd.length-1], poi_y: 100}]
+						d3.select("[id='const_line_t'").transition().duration(1000)
+							.attr("d", valueline(hline))
+						d3.select("[id='const_line_b'").transition().duration(1000)
+							.attr("d", valueline(hline))
+						d3.select("[id='const_line_l'").transition().duration(1000)
+							.attr("d", valueline(hline))
+						d3.select("[id='const_line_r'").transition().duration(1000)
+							.attr("d", valueline(hline))
+
+						for (var i=0; i <= 42; i++) {
+							console.log(i, xd.length)
+							if (xd.length > i) {
+								vline = [{poi_x: xd[i], poi_y: yd[i]},{poi_x: xd[i], poi_y: gd[i]}]
+								d3.select("[id='"+i+"join_line_t']").transition().duration(1000)
+									.attr("d", valueline(vline))
+									.style("color", cd)
+									.style("opacity", 0.3)
+								d3.select("[id='"+i+"track_circle_t']").transition().duration(1000)
+									.attr("cx", x(tracks[i].poi_x))
+									.attr("cy", y(tracks[i].poi_y))
+									.style("stroke", cd)
+									.style("opacity", 1)
+
+								d3.select("[id='"+i+"join_line_b']").transition().duration(1000)
+									.attr("d", valueline(vline))
+									.style("color", cd)
+									.style("opacity", 0.3)
+								d3.select("[id='"+i+"track_circle_b']").transition().duration(1000)
+									.attr("cx", x(tracks[i].poi_x))
+									.attr("cy", y(tracks[i].poi_y))
+									.style("stroke", cd)
+									.style("opacity", 1)
+
+								d3.select("[id='"+i+"join_line_l']").transition().duration(1000)
+									.attr("d", valueline(vline))
+									.style("color", cd)
+									.style("opacity", 0.3)
+								d3.select("[id='"+i+"track_circle_l']").transition().duration(1000)
+									.attr("cx", x(tracks[i].poi_x))
+									.attr("cy", y(tracks[i].poi_y))
+									.style("stroke", cd)
+									.style("opacity", 1)
+
+								d3.select("[id='"+i+"join_line_r']").transition().duration(1000)
+									.attr("d", valueline(vline))
+									.style("color", cd)
+									.style("opacity", 0.3)
+								d3.select("[id='"+i+"track_circle_r']").transition().duration(1000)
+									.attr("cx", x(tracks[i].poi_x))
+									.attr("cy", y(tracks[i].poi_y))
+									.style("stroke", cd)
+									.style("opacity", 1)
+							} else {
+								d3.select("[id='"+i+"join_line_t']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"track_circle_t']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"join_line_b']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"track_circle_b']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"join_line_l']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"track_circle_l']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"join_line_r']").transition().duration(1000)
+									.style("opacity", 0)
+								d3.select("[id='"+i+"track_circle_r']").transition().duration(1000)
+									.style("opacity", 0)
+							}
+						}
+					};
+
+				})
+
+			};
+
+			chart_build('District_1', true, 100)
+
+			d3.select("#dd1").on("change", function() {
+				file = d3.event.target.value
+				chart_build(file, false, init)
+			});
+
+			d3.select("#dist_slider").on("input", function() {
+				init = d3.event.target.value 
+				chart_build(file, false, init)
+			})
+		</script>
+</html>
