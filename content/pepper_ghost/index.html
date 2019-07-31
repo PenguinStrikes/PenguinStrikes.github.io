@@ -31,7 +31,7 @@
 				<option value="Victoria">Victoria</option>
 				<option value="Waterloo">Waterloo</option>
 			</select><p>
-			<div class="slidecontainer" id="s1">
+			<div class="slidecontainer" id="s1">Reduce line length:
 				<input autocomplete="off" type="range" min="1" max="100" value="100" class="slider" id="dist_slider">
 			</div>
 		</div>
@@ -52,6 +52,7 @@
 			var w = document.getElementById("chrt_wrapper_top").offsetWidth;
 			var h = document.getElementById("chrt_wrapper_top").offsetHeight;
 			var init = 100;
+			var filep = 'District_1';
 
 			var graph_top = d3.select('#chrt_wrapper_top').append("svg:svg")
 				.attr("width", w)
@@ -62,27 +63,27 @@
 			var graph_bot = d3.select('#chrt_wrapper_bot').append("svg:svg")
 				.attr("width", w)
 				.attr("height", h)
-				.attr('transform', 'rotate(180 0 0)')
+				//.attr('-webkit-transform', 'rotate(180 0 0)')
 				.append("svg:g")
 				.attr("transform", "translate(0,30)")
 
 			var graph_lft = d3.select('#chrt_wrapper_lft').append("svg:svg")
 				.attr("width", w)
 				.attr("height", h)
-				.attr('transform', 'rotate(270 0 0)')
+				//.attr('transform', 'rotate(270.1 0 0)')
 				.append("svg:g")
 				.attr("transform", "translate(0,30)")
 
 			var graph_rgt = d3.select('#chrt_wrapper_rgt').append("svg:svg")
 				.attr("width", w)
 				.attr("height", h)
-				.attr('transform', 'rotate(90 0 0)')
+				//.attr('transform', 'rotate(91 0 0)')
 				.append("svg:g")
 				.attr("transform", "translate(0,30)")
 				
 
-			function chart_build(file, redraw, init) {
-				d3.json("data/"+file+".json", function(j) {
+			function chart_build(filep, redraw, init) {
+				d3.json("data/"+filep+".json", function(j) {
 					xd = j["x"];
 					yd = j["y"];
 					gd = j["g"];
@@ -328,13 +329,13 @@
 							.style("stroke", cd)
 
 						hline = [{poi_x: xd[0], poi_y: 100},{poi_x: xd[xd.length-1], poi_y: 100}]
-						d3.select("[id='const_line_t'").transition().duration(1000)
+						d3.select("[id='const_line_t']").transition().duration(1000)
 							.attr("d", valueline(hline))
-						d3.select("[id='const_line_b'").transition().duration(1000)
+						d3.select("[id='const_line_b']").transition().duration(1000)
 							.attr("d", valueline(hline))
-						d3.select("[id='const_line_l'").transition().duration(1000)
+						d3.select("[id='const_line_l']").transition().duration(1000)
 							.attr("d", valueline(hline))
-						d3.select("[id='const_line_r'").transition().duration(1000)
+						d3.select("[id='const_line_r']").transition().duration(1000)
 							.attr("d", valueline(hline))
 
 						for (var i=0; i <= 42; i++) {
@@ -408,13 +409,13 @@
 			chart_build('District_1', true, 100)
 
 			d3.select("#dd1").on("change", function() {
-				file = d3.event.target.value
-				chart_build(file, false, init)
+				filep = d3.event.target.value
+				chart_build(filep, false, init)
 			});
 
 			d3.select("#dist_slider").on("input", function() {
 				init = d3.event.target.value 
-				chart_build(file, false, init)
+				chart_build(filep, false, init)
 			})
 		</script>
 </html>
