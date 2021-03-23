@@ -60,13 +60,15 @@ and (max-width : 480px) {
 	margin-right: 0%;
   }
 
-  .col-0 {width: 30%;}
-  .col-1 {width: 10%;}
-  .col-2 {width: 23%;}
+  .col-0 {width: 28%;}
+  .col-1 {width: 6%;}
+  .col-2 {width: 21%;}
   .col-3 {width: 10%;}
-  .col-4 {width: 27%; font-size: 9px}
-  .col-5 {width: 0%;}
+  .col-4 {width: 8%;}
+  .col-5 {width: 27%; font-size: 9px}
   .col-6 {width: 0%;}
+  .col-7 {width: 0%;}
+  .col-8 {width: 0%;}
   .row:hover {text-shadow: -1px 1px 8px #ffc, 1px -1px 8px #737373; }
   .header {font-weight: bold;}
   .cell {

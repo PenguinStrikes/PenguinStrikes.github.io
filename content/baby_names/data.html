@@ -118,10 +118,12 @@
 						Name:          d['Name'],
 						Rank:          d['Rank'],
 						Prediction:    d['Predicted Change'],
+						Syllables:     d['syllables']
 						Score:         d['Score'],
 						Phonetics:     d['phonetics_space'],
 						trnd:          d['trend_data'],
 						futu:          d['trend_2020']
+						gndr:          d['Sex']
 					};});
 
 					data = [];
@@ -135,7 +137,7 @@
 						.datum(dps)
 						.call(grid)
 						.selectAll(".row")
-						.on("click", function(d) {nameSelect(d['trnd'], d['futu'], gender)})
+						.on("click", function(d) {nameSelect(d['trnd'], d['futu'], d['gndr'])})
 				});
 			};
 
